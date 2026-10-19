@@ -1,6 +1,7 @@
 import pygame
 import random
 import config
+import brain
 
 class Player:
     def __init__(self):
@@ -13,6 +14,10 @@ class Player:
         self.alive = True
         #AI
         self.decision = None
+        self.vision = [0.5, 1, 0.5]
+        self.inputs = 3
+        self.brain = brain.Brain(self.inputs)
+        self.brain.generate_net()
 
     #Game related functions
     def draw(self, window):
@@ -34,3 +39,46 @@ class Player:
             #Gravity
             self.vel += 0.25
             self.rect.y += self.vel
+            if self.vel > 5:
+                self.vel = 5
+        else:
+            self.alive = False
+            self.flap = False
+            self.vel = 0
+
+    def bird_flap(self):
+        if not self.flap and not self.sky_collision():
+            self.flap = True
+            self.vel = -5
+        if self.vel >= 3:
+            self.flap = False
+
+    @staticmethod
+    def closest_pipe():
+        for p in config.pipes:
+            if not p.passed:
+                return p
+
+    #AI functions
+    def look(self): #Calculates players vision, followed by drawing a line to represent that distance
+        if config.pipes:
+            
+            #Vertical distance line to bottommost part of the upcoming top pipe
+            self.vision[0] = max(0, self.rect.center[1] - self.closest_pipe().topRect.bottom) / 500
+            pygame.draw.line(config.window, self.color, self.rect.center, 
+                             (self.rect.center[0], config.pipes[0].topRect.bottom))
+
+            #Vertical distance line to topmost part of the upcoming bottom pipe
+            self.vision[1] = max(0, self.closest_pipe().bottomRect.top - self.rect.center[1]) / 500
+            pygame.draw.line(config.window, self.color, self.rect.center, 
+                             (self.rect.center[0], config.pipes[0].bottomRect.top))
+
+            #Horizontal distance line to middle of the upcoming pair of pipes
+            self.vision[2] = max(0, self.closest_pipe().x - self.rect.center[0]) / 500
+            pygame.draw.line(config.window, self.color, self.rect.center, 
+                             (config.pipes[0].x, self.rect.center[1]))
+    
+    def think(self):
+        self.decision = self.brain.feed_forward(self.vision)
+        if self.decision > .73:
+            self.bird_flap()
