@@ -1,8 +1,8 @@
-import pygame
 from sys import exit
-import config
 import components
+import config
 import population
+import pygame
 
 pygame.init()
 clock = pygame.time.Clock()
@@ -26,10 +26,10 @@ def main():
 
         config.window.fill((0, 0, 0))
 
-        #Spawn Ground
+        # Spawn Ground
         config.ground.draw(config.window)
 
-        #Spawn Pipes
+        # Spawn Pipes
         if pipesSpawnTime <= 0:
             generate_pipes()
             pipesSpawnTime = 200

@@ -1,6 +1,5 @@
 import connection
 import node
-import pickle
 import random
 
 
@@ -11,47 +10,29 @@ class Brain:
         self.nodes = []
         self.inputs = inputs
         self.net = []
-        self.layers = 3  # Layer 0: Input/Bias, Layer 1: Hidden, Layer 2: Output
+        self.layers = 2
 
         if not clone:
-            # 1. Create input nodes (Layer 0)
+            # Create input nodes
             for i in range(0, self.inputs):
-                n = node.Node(i)
-                n.layer = 0
-                self.nodes.append(n)
+                self.nodes.append(node.Node(i))
+                self.nodes[i].layer = 0
+            # Create bias nodeS
+            self.nodes.append(node.Node(3))
+            self.nodes[3].layer = 1
+            self.nodes.append(node.Node(4))
+            self.nodes[4].layer = 1
+            # Create output node
+            self.nodes.append(node.Node(5))
+            self.nodes[5].layer = 1
 
-            # 2. Create single bias node (Layer 0)
-            bias_node = node.Node(self.inputs)
-            bias_node.layer = 0
-            self.nodes.append(bias_node)
-
-            # 3. Create hidden node (Layer 1)
-            hidden_node = node.Node(self.inputs + 1)
-            hidden_node.layer = 1
-            self.nodes.append(hidden_node)
-
-            # 4. Create output node (Layer 2)
-            output_node = node.Node(self.inputs + 2)
-            output_node.layer = 2
-            self.nodes.append(output_node)
-
-            # 5. Connect Input + Bias nodes to Hidden Node
-            for i in range(0, self.inputs + 1):
+            # Create connection between nodes
+            for i in range(0, 4):
                 self.connections.append(
                     connection.Connection(
-                        self.nodes[i], hidden_node, random.uniform(-1, 1)
+                        self.nodes[i], self.nodes[4], random.uniform(-1, 1)
                     )
                 )
-
-            # 6. Connect Hidden Node to Output Node
-            self.connections.append(
-                connection.Connection(
-                    hidden_node, output_node, random.uniform(-1, 1)
-                )
-            )
-
-            # Build the ordered network array
-            self.generate_net()
 
     def connect_nodes(self):
         for i in range(0, len(self.nodes)):
@@ -69,21 +50,16 @@ class Brain:
                     self.net.append(self.nodes[j])
 
     def feed_forward(self, vision):
-        # Set input node values
         for i in range(0, self.inputs):
             self.nodes[i].outputValue = vision[i]
 
-        # Set bias node output (located at index equal to self.inputs)
-        self.nodes[self.inputs].outputValue = 1.0
+        self.nodes[3].outputValue = 1
 
-        # Activate all nodes in topological layer order
         for i in range(0, len(self.net)):
             self.net[i].activate()
 
-        # Get output from the output node (the last node in self.nodes)
-        outputValue = self.nodes[-1].outputValue
+        outputValue = self.nodes[4].outputValue
 
-        # Reset accumulated inputs for next frame
         for i in range(0, len(self.nodes)):
             self.nodes[i].inputValue = 0
 
@@ -103,27 +79,15 @@ class Brain:
             )
 
         clone.layers = self.layers
-        clone.generate_net()
+        clone.connect_nodes()
         return clone
 
     def getNode(self, id):
         for n in self.nodes:
             if n.id == id:
                 return n
-        return None
 
     def mutate(self):
         if random.uniform(0, 1) < 0.9:
             for i in range(0, len(self.connections)):
                 self.connections[i].mutate_weight()
-
-    def save(self, filename="best_brain.pkl"):
-        """Saves the current Brain instance to a binary file."""
-        with open(filename, "wb") as f:
-            pickle.dump(self, f)
-
-    @staticmethod
-    def load(filename="best_brain.pkl"):
-        """Loads and returns a Brain instance from a binary file."""
-        with open(filename, "rb") as f:
-            return pickle.load(f)
