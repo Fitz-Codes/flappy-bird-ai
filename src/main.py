@@ -33,7 +33,7 @@ def main():
         if pipesSpawnTime <= 0:
             generate_pipes()
             pipesSpawnTime = 200
-        pipesSpawnTime -= 1
+        pipesSpawnTime -= 2
 
         for p in config.pipes:
             p.draw(config.window)
@@ -43,8 +43,10 @@ def main():
 
         if not population.extinct():
             population.update_live_players()
+
         else:
-            pass
+            config.pipes.clear()
+            population.natural_selection()
 
         clock.tick(60)
         pygame.display.flip()

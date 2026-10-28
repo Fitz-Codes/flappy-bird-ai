@@ -12,8 +12,8 @@ class Ground:
         pygame.draw.rect(window, (255, 255, 255), self.rect)
 
 class Pipe:
-    width = 15
-    opening = 100
+    width = 10
+    opening = 80
 
     def __init__(self, winWidth):
         self.x = winWidth
@@ -34,5 +34,5 @@ class Pipe:
         self.x -= 1
         if self.x + Pipe.width <= 50:
             self.passed = True
-        if self.x <= -self.width:
+        if self.x <= -self.width -10:
             self.offScreen = True
